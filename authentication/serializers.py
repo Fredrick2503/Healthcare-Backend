@@ -46,14 +46,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
         return user
 
-class TokenPairSerializer(serializers.Serializer):
-    access = serializers.CharField(help_text="Signed JWT Access Token (expires in 60 min)")
-    refresh = serializers.CharField(help_text="Signed JWT Refresh Token (expires in 7 days)")
-
 class RegisterResponseSerializer(serializers.Serializer):
     message = serializers.CharField(default="User registered successfully.")
     user = UserSerializer()
-    tokens = TokenPairSerializer()
+    token = serializers.CharField(help_text="Single JWT Token")
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField(
@@ -83,18 +79,13 @@ class LoginSerializer(serializers.Serializer):
 
         refresh = RefreshToken.for_user(user)
         attrs['user'] = user
-        attrs['tokens'] = {
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-        }
+        attrs['token'] = str(refresh.access_token)
         return attrs
 
 class LoginResponseSerializer(serializers.Serializer):
     message = serializers.CharField(default="Login successful.")
     user = UserSerializer()
-    access = serializers.CharField(help_text="JWT Access Token")
-    refresh = serializers.CharField(help_text="JWT Refresh Token")
-    tokens = TokenPairSerializer()
+    token = serializers.CharField(help_text="Single JWT Token")
 
 class RedisRevokeTokenSerializer(serializers.Serializer):
     token = serializers.CharField(

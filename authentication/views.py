@@ -80,7 +80,7 @@ class RegisterView(generics.CreateAPIView):
     @extend_schema(
         tags=['Authentication'],
         summary="User Registration",
-        description="Creates a new user profile with name, email, and password, and issues initial JWT access/refresh tokens.",
+        description="Creates a new user profile with name, email, and password, and returns a single JWT token.",
         request=RegisterSerializer,
         responses={
             201: RegisterResponseSerializer,
@@ -103,21 +103,18 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        # Generate JWT tokens for immediate access
+        # Generate single JWT token
         refresh = RefreshToken.for_user(user)
 
         return Response({
             "message": "User registered successfully.",
             "user": UserSerializer(user).data,
-            "tokens": {
-                "refresh": str(refresh),
-                "access": str(refresh.access_token),
-            }
+            "token": str(refresh.access_token)
         }, status=status.HTTP_201_CREATED)
 
 class LoginView(APIView):
     """
-    Authenticate an existing user using email and password, returning JWT tokens.
+    Authenticate an existing user using email and password, returning a single JWT token.
     """
     permission_classes = [AllowAny]
     serializer_class = LoginSerializer
@@ -125,7 +122,7 @@ class LoginView(APIView):
     @extend_schema(
         tags=['Authentication'],
         summary="User Login",
-        description="Authenticates user credentials and returns signed JWT access (60 min) and refresh (7 days) tokens.",
+        description="Authenticates user credentials and returns user details and a single JWT token.",
         request=LoginSerializer,
         responses={
             200: LoginResponseSerializer,
@@ -147,14 +144,12 @@ class LoginView(APIView):
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
         user = validated_data['user']
-        tokens = validated_data['tokens']
+        token = validated_data['token']
 
         return Response({
             "message": "Login successful.",
             "user": UserSerializer(user).data,
-            "access": tokens['access'],
-            "refresh": tokens['refresh'],
-            "tokens": tokens
+            "token": token
         }, status=status.HTTP_200_OK)
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
