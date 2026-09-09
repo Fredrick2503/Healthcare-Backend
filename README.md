@@ -28,7 +28,7 @@ The system provides robust authentication, patient and doctor lifecycle manageme
 - [API Reference](#-api-reference)
 - [cURL Request & Response Examples](#-curl-request--response-examples)
 - [Running Automated Tests](#-running-automated-tests)
-- [Bruno API Client Collection](#-bruno-api-client-collection)
+- [Postman API Collection & Testing](#-postman-api-collection--testing)
 - [Production Deployment](#-production-deployment)
 - [Troubleshooting & FAQ](#-troubleshooting--faq)
 
@@ -68,7 +68,7 @@ The system provides robust authentication, patient and doctor lifecycle manageme
 ```text
                                ┌────────────────────────────────────────┐
                                │             Client / Frontend          │
-                               │        (Browser, Mobile, Bruno)        │
+                               │        (Browser, Mobile, Postman)      │
                                └───────────────────┬────────────────────┘
                                                    │ HTTP / REST (Port 8000)
                                                    ▼
@@ -143,16 +143,9 @@ whatbytes/
 │       └── commands/
 │           └── seed_data.py          # Database seeding command for sample data
 │
-└── WhatByte/                         # Bruno API Client Collection
-    ├── opencollection.yml            # Bruno collection metadata
-    ├── environments/
-    │   └── Local.bru                 # Local environment variables (baseUrl, token)
-    ├── Auth/                         # Authentication Bruno requests
-    ├── Health/                       # Healthcheck Bruno requests
-    ├── Patients/                     # Patient CRUD Bruno requests
-    ├── Doctors/                      # Doctor CRUD Bruno requests
-    ├── Mappings/                     # Patient-Doctor Mapping Bruno requests
-    └── Docs/                         # Swagger & OpenAPI schema Bruno requests
+└── postman/                          # Postman API Collection & Environment
+    ├── Healthcare_API.postman_collection.json   # Full endpoint collection with automated token test scripts
+    └── Healthcare_API.postman_environment.json  # Environment variables (base_url, access_token, entity IDs)
 ```
 
 ---
@@ -579,22 +572,28 @@ python manage.py test
 
 ---
 
-## 🦊 Bruno API Client Collection
+## 📮 Postman API Collection & Testing
 
-A complete, structured [Bruno](https://www.usebruno.com/) API collection is included in the [`WhatByte/`](WhatByte/) directory.
+A complete, production-ready Postman collection and environment are provided in the [`postman/`](postman/) directory:
 
-### How to use with Bruno:
-1. Open the Bruno desktop application.
-2. Click **Open Collection**.
-3. Select the `WhatByte` directory in this project root.
-4. Select the **Local** environment (`baseUrl: http://localhost:8000`).
-5. Execute requests directly from the collection folders:
-   - `Auth/` (Register, Login, Profile, Redis Revoke, Token Refresh, Verify, Blacklist)
-   - `Health/` (Health Check)
-   - `Patients/` (List, Create, Get, Update, Delete)
-   - `Doctors/` (List, Create, Get, Update, Delete)
-   - `Mappings/` (List, Assign, Get Doctors For Patient, Delete Mapping)
-   - `Docs/` (OpenAPI Schema, Swagger UI, ReDoc)
+- **Collection**: [`postman/Healthcare_API.postman_collection.json`](postman/Healthcare_API.postman_collection.json)
+- **Environment**: [`postman/Healthcare_API.postman_environment.json`](postman/Healthcare_API.postman_environment.json)
+
+### Features of the Postman Setup:
+- **Organized Folders**: Health Check, Authentication, Patients, Doctors, Patient-Doctor Mappings, and Documentation & Schema.
+- **Automatic Token Capture**: Both **Register User** and **Login User** requests contain post-response test scripts that automatically extract the JWT `token` and `refresh` and populate `access_token` and `refresh_token` in the active Postman environment.
+- **Dynamic ID Variables**: Request URLs reference `{{patient_id}}`, `{{doctor_id}}`, and `{{mapping_id}}` which automatically synchronize when you create new records.
+- **Bearer Token Auth**: All authenticated endpoints automatically reference `{{access_token}}`.
+
+### How to Import & Use in Postman:
+1. Open the **Postman** desktop application (or web client).
+2. Click **Import** in the top-left corner of your workspace.
+3. Select or drag & drop the two files:
+   - `postman/Healthcare_API.postman_collection.json`
+   - `postman/Healthcare_API.postman_environment.json`
+4. In the top-right environment selector in Postman, select **Healthcare API - Local Environment**.
+5. Open the **Authentication** folder and run **Login User** (or **Register User**). The `access_token` will be set automatically.
+6. Now you can run any request across **Patients**, **Doctors**, **Mappings**, and **Health Check** without manually copying tokens!
 
 ---
 
