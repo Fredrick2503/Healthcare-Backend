@@ -84,7 +84,6 @@ class AuthenticationAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['user']['email'], 'newuser@example.com')
         self.assertEqual(response.data['user']['name'], 'New User')
-        self.assertIn('token', response.data)
         self.assertIn('access', response.data)
         self.assertIn('refresh', response.data)
 
@@ -110,7 +109,6 @@ class AuthenticationAPITests(APITestCase):
         }
         response = self.client.post(self.login_url, payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('token', response.data)
         self.assertIn('access', response.data)
         self.assertIn('refresh', response.data)
         self.assertEqual(response.data['user']['email'], 'existing@example.com')

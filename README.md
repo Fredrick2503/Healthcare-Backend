@@ -430,7 +430,6 @@ curl -X POST http://localhost:8000/api/auth/register/ \
     "name": "Dr. John Watson",
     "created_at": "2026-09-09T16:25:00.000Z"
   },
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
@@ -457,7 +456,6 @@ curl -X POST http://localhost:8000/api/auth/login/ \
     "name": "Dr. John Watson",
     "created_at": "2026-09-09T16:25:00.000Z"
   },
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }

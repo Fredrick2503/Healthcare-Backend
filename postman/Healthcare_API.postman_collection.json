@@ -41,8 +41,8 @@
               "script": {
                 "exec": [
                   "var jsonData = pm.response.json();",
-                  "if (jsonData.token) {",
-                  "    pm.environment.set('access_token', jsonData.token);",
+                  "if (jsonData.access) {",
+                  "    pm.environment.set('access_token', jsonData.access);",
                   "}",
                   "if (jsonData.refresh) {",
                   "    pm.environment.set('refresh_token', jsonData.refresh);",
@@ -81,8 +81,8 @@
               "script": {
                 "exec": [
                   "var jsonData = pm.response.json();",
-                  "if (jsonData.token) {",
-                  "    pm.environment.set('access_token', jsonData.token);",
+                  "if (jsonData.access) {",
+                  "    pm.environment.set('access_token', jsonData.access);",
                   "}",
                   "if (jsonData.refresh) {",
                   "    pm.environment.set('refresh_token', jsonData.refresh);",
