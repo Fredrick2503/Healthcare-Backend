@@ -1,4 +1,4 @@
-from django.contrib.auth import get_user_model, authenticate
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import UntypedToken, RefreshToken
 import jwt
@@ -13,15 +13,25 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'created_at', 'updated_at')
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True, min_length=8)
+    name = serializers.CharField(
+        required=True,
+        max_length=255,
+        help_text="Full name of the user (e.g. Dr. Meredith Grey)"
+    )
+    email = serializers.EmailField(
+        required=True,
+        help_text="Valid and unique email address (e.g. user@example.com)"
+    )
+    password = serializers.CharField(
+        write_only=True,
+        required=True,
+        min_length=8,
+        help_text="Password with at least 8 characters"
+    )
 
     class Meta:
         model = User
         fields = ('id', 'name', 'email', 'password')
-        extra_kwargs = {
-            'email': {'required': True},
-            'name': {'required': True}
-        }
 
     def validate_email(self, value):
         if User.objects.filter(email__iexact=value).exists():
@@ -36,9 +46,25 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
         return user
 
+class TokenPairSerializer(serializers.Serializer):
+    access = serializers.CharField(help_text="Signed JWT Access Token (expires in 60 min)")
+    refresh = serializers.CharField(help_text="Signed JWT Refresh Token (expires in 7 days)")
+
+class RegisterResponseSerializer(serializers.Serializer):
+    message = serializers.CharField(default="User registered successfully.")
+    user = UserSerializer()
+    tokens = TokenPairSerializer()
+
 class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField(required=True)
-    password = serializers.CharField(write_only=True, required=True)
+    email = serializers.EmailField(
+        required=True,
+        help_text="Registered email address (e.g. dr.meredith@seattlegrace.com)"
+    )
+    password = serializers.CharField(
+        write_only=True,
+        required=True,
+        help_text="Account password"
+    )
 
     def validate(self, attrs):
         email = attrs.get('email', '').lower()
@@ -63,8 +89,18 @@ class LoginSerializer(serializers.Serializer):
         }
         return attrs
 
+class LoginResponseSerializer(serializers.Serializer):
+    message = serializers.CharField(default="Login successful.")
+    user = UserSerializer()
+    access = serializers.CharField(help_text="JWT Access Token")
+    refresh = serializers.CharField(help_text="JWT Refresh Token")
+    tokens = TokenPairSerializer()
+
 class RedisRevokeTokenSerializer(serializers.Serializer):
-    token = serializers.CharField(required=True, help_text="JWT access or refresh token string to revoke in Redis")
+    token = serializers.CharField(
+        required=True,
+        help_text="JWT access or refresh token string to revoke immediately in Redis"
+    )
 
     def validate_token(self, value):
         try:

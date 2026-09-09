@@ -1,6 +1,7 @@
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken
 from authentication.redis_client import is_token_blacklisted_in_redis
+from drf_spectacular.extensions import OpenApiAuthenticationExtension
 
 class RedisJWTAuthentication(JWTAuthentication):
     """
@@ -16,3 +17,19 @@ class RedisJWTAuthentication(JWTAuthentication):
                 'code': 'token_revoked'
             })
         return validated_token
+
+class RedisJWTAuthenticationScheme(OpenApiAuthenticationExtension):
+    """
+    OpenAPI 3.0 security scheme definition for RedisJWTAuthentication.
+    Renders the Bearer JWT authorization lock in Swagger UI.
+    """
+    target_class = 'authentication.authentication.RedisJWTAuthentication'
+    name = 'jwtAuth'
+
+    def get_security_definition(self, auto_schema):
+        return {
+            'type': 'http',
+            'scheme': 'bearer',
+            'bearerFormat': 'JWT',
+            'description': 'Enter JWT Bearer token obtained from /api/auth/login/ or /api/auth/register/'
+        }

@@ -6,11 +6,14 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
+from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
 
 from authentication.serializers import (
     UserSerializer,
     RegisterSerializer,
+    RegisterResponseSerializer,
     LoginSerializer,
+    LoginResponseSerializer,
     RedisRevokeTokenSerializer,
 )
 from authentication.redis_client import (
@@ -22,10 +25,18 @@ User = get_user_model()
 
 class HealthCheckView(APIView):
     """
-    Health check endpoint returning the status of Django, Database, and Redis.
+    Check the health status of the Django application, Database, and Redis cache.
     """
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        tags=['System'],
+        summary="Service Health Check",
+        description="Returns current availability and connectivity status for PostgreSQL/SQLite and Redis.",
+        responses={
+            200: OpenApiResponse(description="Health status report (healthy or degraded).")
+        }
+    )
     def get(self, request):
         health_report = {
             "status": "healthy",
@@ -60,14 +71,34 @@ class HealthCheckView(APIView):
 
 class RegisterView(generics.CreateAPIView):
     """
-    POST /api/auth/register/
-    Register a new user with name, email, and password.
+    Register a new user account with name, email, and password.
     """
     queryset = User.objects.all()
     permission_classes = [AllowAny]
     serializer_class = RegisterSerializer
 
-    def create(self, request, *args, **kwargs):
+    @extend_schema(
+        tags=['Authentication'],
+        summary="User Registration",
+        description="Creates a new user profile with name, email, and password, and issues initial JWT access/refresh tokens.",
+        request=RegisterSerializer,
+        responses={
+            201: RegisterResponseSerializer,
+            400: OpenApiResponse(description="Validation error (e.g. duplicate email, invalid password).")
+        },
+        examples=[
+            OpenApiExample(
+                "Registration Example",
+                value={
+                    "name": "Dr. Meredith Grey",
+                    "email": "meredith@grey.com",
+                    "password": "Password123!"
+                },
+                request_only=True
+            )
+        ]
+    )
+    def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
@@ -86,11 +117,31 @@ class RegisterView(generics.CreateAPIView):
 
 class LoginView(APIView):
     """
-    POST /api/auth/login/
-    Log in a user with email and password, returning JWT access & refresh tokens.
+    Authenticate an existing user using email and password, returning JWT tokens.
     """
     permission_classes = [AllowAny]
+    serializer_class = LoginSerializer
 
+    @extend_schema(
+        tags=['Authentication'],
+        summary="User Login",
+        description="Authenticates user credentials and returns signed JWT access (60 min) and refresh (7 days) tokens.",
+        request=LoginSerializer,
+        responses={
+            200: LoginResponseSerializer,
+            400: OpenApiResponse(description="Invalid credentials or disabled account.")
+        },
+        examples=[
+            OpenApiExample(
+                "Login Example",
+                value={
+                    "email": "dr.meredith@seattlegrace.com",
+                    "password": "Password123!"
+                },
+                request_only=True
+            )
+        ]
+    )
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -108,22 +159,56 @@ class LoginView(APIView):
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
     """
-    GET /api/auth/profile/
-    Retrieve or update currently authenticated user profile.
+    Retrieve or update the currently authenticated user's profile.
     """
     permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
+
+    @extend_schema(
+        tags=['Authentication'],
+        summary="Get / Update User Profile",
+        description="Returns profile details for the currently authenticated user identified by the Bearer access token."
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @extend_schema(
+        tags=['Authentication'],
+        summary="Update User Profile",
+        description="Update profile details (name, email) for the authenticated user."
+    )
+    def put(self, request, *args, **kwargs):
+        return super().put(request, *args, **kwargs)
+
+    @extend_schema(
+        tags=['Authentication'],
+        summary="Partial Update User Profile",
+        description="Partially update profile details for the authenticated user."
+    )
+    def patch(self, request, *args, **kwargs):
+        return super().patch(request, *args, **kwargs)
 
     def get_object(self):
         return self.request.user
 
 class RedisRevokeTokenView(APIView):
     """
-    POST /api/auth/redis-revoke/
-    Revokes a JWT token directly in Redis cache for instantaneous invalidation.
+    Revoke a JWT token instantaneously via Redis cache.
     """
     permission_classes = [IsAuthenticated]
+    serializer_class = RedisRevokeTokenSerializer
 
+    @extend_schema(
+        tags=['Authentication'],
+        summary="Instant Token Revocation (Redis)",
+        description="Stores the token's JTI claim in Redis with auto-expiring TTL matching the token lifespan, instantly rejecting any subsequent requests.",
+        request=RedisRevokeTokenSerializer,
+        responses={
+            200: OpenApiResponse(description="Token successfully revoked in Redis."),
+            400: OpenApiResponse(description="Invalid token format or missing JTI claim."),
+            500: OpenApiResponse(description="Redis is disabled or connection failed.")
+        }
+    )
     def post(self, request):
         serializer = RedisRevokeTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
