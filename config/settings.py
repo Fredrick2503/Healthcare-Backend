@@ -44,7 +44,10 @@ INSTALLED_APPS = [
 
     # Local apps
     'authentication',
+    'healthcare',
 ]
+
+AUTH_USER_MODEL = 'authentication.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
