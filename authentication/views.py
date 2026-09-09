@@ -80,7 +80,7 @@ class RegisterView(generics.CreateAPIView):
     @extend_schema(
         tags=['Authentication'],
         summary="User Registration",
-        description="Creates a new user profile with name, email, and password, and returns a single JWT token.",
+        description="Creates a new user profile with name, email, and password, and issues initial JWT access/refresh tokens.",
         request=RegisterSerializer,
         responses={
             201: RegisterResponseSerializer,
@@ -103,13 +103,13 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        # Generate single JWT token
+        # Generate JWT tokens for immediate access
         refresh = RefreshToken.for_user(user)
 
         return Response({
             "message": "User registered successfully.",
             "user": UserSerializer(user).data,
-            "token": str(refresh.access_token)
+            "token": str(refresh.access_token),
         }, status=status.HTTP_201_CREATED)
 
 class LoginView(APIView):
@@ -122,7 +122,7 @@ class LoginView(APIView):
     @extend_schema(
         tags=['Authentication'],
         summary="User Login",
-        description="Authenticates user credentials and returns user details and a single JWT token.",
+        description="Authenticates user credentials and returns a signed JWT access token.",
         request=LoginSerializer,
         responses={
             200: LoginResponseSerializer,
