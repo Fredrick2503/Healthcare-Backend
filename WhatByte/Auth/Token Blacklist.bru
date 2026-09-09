@@ -1,0 +1,17 @@
+meta {
+  name: Token Blacklist
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/token/blacklist/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "refresh": "<your_refresh_token>"
+  }
+}

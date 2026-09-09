@@ -1,20 +1,51 @@
+# Git
 .git
 .gitignore
+.gitattributes
+
+# Environment & Secrets
 .env
+.env.*
+!.env.example
+
+# Python virtual environments & bytecode
 .venv
 venv
 ENV
+env
 __pycache__
 *.pyc
 *.pyo
 *.pyd
 .Python
+
+# Local SQLite databases
+db.sqlite3
+db.sqlite3-journal
+*.sqlite3
+
+# Logs & media / static collection
 *.log
 staticfiles
 media
+
+# IDE & OS files
 .idea
 .vscode
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Test & coverage artifacts
+.coverage
+htmlcov
+.pytest_cache
+
+# Documentation & API collections (not needed in container runtime)
 Dockerfile*
 docker-compose*
 README.md
 docs
+WhatByte
+scratch

@@ -1,0 +1,18 @@
+# Auto-detect text files and perform LF normalization
+* text=auto
+
+# Ensure shell scripts always use LF line endings across all OS environments
+*.sh text eol=lf
+
+# Python, YAML, Markdown, and Configuration files
+*.py text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.bru text eol=lf
+Dockerfile* text eol=lf
+.env* text eol=lf
+.dockerignore text eol=lf
+.gitignore text eol=lf

@@ -1,0 +1,26 @@
+meta {
+  name: Update Doctor
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/doctors/1/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "name": "Dr. Gregory House",
+    "email": "house@ppth.org",
+    "phone": "+1-555-010-099",
+    "specialization": "Head of Diagnostic Medicine",
+    "license_number": "LIC-99882",
+    "address": "Princeton-Plainsboro Teaching Hospital, Suite 400"
+  }
+}

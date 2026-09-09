@@ -1,0 +1,19 @@
+meta {
+  name: Redis Revoke Token
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/auth/redis-revoke/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {}
+}
