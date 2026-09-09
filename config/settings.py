@@ -105,22 +105,30 @@ else:
         }
     }
 
-# Cache Configuration (Redis Cache Backend)
+# Cache Configuration (Redis Cache Backend with LocMem fallback)
 REDIS_URL = os.getenv('REDIS_URL', 'redis://redis:6379/1')
-USE_REDIS_FOR_JWT = os.getenv('USE_REDIS_FOR_JWT', 'True').lower() in ('true', '1', 'yes')
+USE_REDIS_FOR_JWT = os.getenv('USE_REDIS_FOR_JWT', 'False').lower() in ('true', '1', 'yes')
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': REDIS_URL,
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'SOCKET_CONNECT_TIMEOUT': 5,
-            'SOCKET_TIMEOUT': 5,
-            'IGNORE_EXCEPTIONS': True,
+if USE_REDIS_FOR_JWT:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': REDIS_URL,
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                'SOCKET_CONNECT_TIMEOUT': 5,
+                'SOCKET_TIMEOUT': 5,
+                'IGNORE_EXCEPTIONS': True,
+            }
         }
     }
-}
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'default-local-cache',
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

@@ -65,8 +65,11 @@ def is_token_blacklisted_in_redis(jti: str) -> bool:
 
 def check_redis_health() -> dict:
     """
-    Performs a ping to check Redis health status.
+    Performs a ping to check Redis health status if enabled.
     """
+    if not getattr(settings, 'USE_REDIS_FOR_JWT', True):
+        return {"status": "disabled", "message": "Redis is disabled (USE_REDIS_FOR_JWT=False)"}
+
     client = get_redis_client()
     if not client:
         return {"status": "unavailable", "message": "Redis client initialization failed"}

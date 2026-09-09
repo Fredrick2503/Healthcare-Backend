@@ -49,8 +49,7 @@ class HealthCheckView(APIView):
         # 2. Redis Check
         redis_status = check_redis_health()
         health_report["services"]["redis"] = redis_status
-        if redis_status.get("status") != "healthy":
-            # Redis is optional, so we mark degraded if down
+        if redis_status.get("status") not in ("healthy", "disabled"):
             health_report["status"] = "degraded"
 
         response_status = status.HTTP_200_OK if health_report["status"] == "healthy" else status.HTTP_200_OK
