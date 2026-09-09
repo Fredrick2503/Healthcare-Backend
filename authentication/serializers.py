@@ -49,7 +49,9 @@ class RegisterSerializer(serializers.ModelSerializer):
 class RegisterResponseSerializer(serializers.Serializer):
     message = serializers.CharField(default="User registered successfully.")
     user = UserSerializer()
-    token = serializers.CharField(help_text="JWT Access Token")
+    token = serializers.CharField(help_text="JWT Access Token (alias for access)")
+    access = serializers.CharField(help_text="JWT Access Token")
+    refresh = serializers.CharField(help_text="JWT Refresh Token")
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField(
@@ -80,12 +82,16 @@ class LoginSerializer(serializers.Serializer):
         refresh = RefreshToken.for_user(user)
         attrs['user'] = user
         attrs['token'] = str(refresh.access_token)
+        attrs['access'] = str(refresh.access_token)
+        attrs['refresh'] = str(refresh)
         return attrs
 
 class LoginResponseSerializer(serializers.Serializer):
     message = serializers.CharField(default="Login successful.")
     user = UserSerializer()
-    token = serializers.CharField(help_text="JWT Access Token")
+    token = serializers.CharField(help_text="JWT Access Token (alias for access)")
+    access = serializers.CharField(help_text="JWT Access Token")
+    refresh = serializers.CharField(help_text="JWT Refresh Token")
 
 class RedisRevokeTokenSerializer(serializers.Serializer):
     token = serializers.CharField(

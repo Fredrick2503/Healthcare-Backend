@@ -110,11 +110,13 @@ class RegisterView(generics.CreateAPIView):
             "message": "User registered successfully.",
             "user": UserSerializer(user).data,
             "token": str(refresh.access_token),
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
         }, status=status.HTTP_201_CREATED)
 
 class LoginView(APIView):
     """
-    Authenticate an existing user using email and password, returning a single JWT token.
+    Authenticate an existing user using email and password, returning JWT access and refresh tokens.
     """
     permission_classes = [AllowAny]
     serializer_class = LoginSerializer
@@ -122,7 +124,7 @@ class LoginView(APIView):
     @extend_schema(
         tags=['Authentication'],
         summary="User Login",
-        description="Authenticates user credentials and returns a signed JWT access token.",
+        description="Authenticates user credentials and returns signed JWT access and refresh tokens.",
         request=LoginSerializer,
         responses={
             200: LoginResponseSerializer,
@@ -144,12 +146,13 @@ class LoginView(APIView):
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
         user = validated_data['user']
-        token = validated_data['token']
 
         return Response({
             "message": "Login successful.",
             "user": UserSerializer(user).data,
-            "token": token
+            "token": validated_data['token'],
+            "access": validated_data['access'],
+            "refresh": validated_data['refresh'],
         }, status=status.HTTP_200_OK)
 
 class UserProfileView(generics.RetrieveUpdateAPIView):

@@ -423,6 +423,7 @@ curl -X POST http://localhost:8000/api/auth/register/ \
 **Response (`201 Created`):**
 ```json
 {
+  "message": "User registered successfully.",
   "user": {
     "id": 4,
     "email": "dr.watson@hospital.com",
@@ -430,6 +431,7 @@ curl -X POST http://localhost:8000/api/auth/register/ \
     "created_at": "2026-09-09T16:25:00.000Z"
   },
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
@@ -443,6 +445,22 @@ curl -X POST http://localhost:8000/api/auth/login/ \
     "email": "dr.watson@hospital.com",
     "password": "SecurePassword123!"
   }'
+```
+
+**Response (`200 OK`):**
+```json
+{
+  "message": "Login successful.",
+  "user": {
+    "id": 4,
+    "email": "dr.watson@hospital.com",
+    "name": "Dr. John Watson",
+    "created_at": "2026-09-09T16:25:00.000Z"
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
 ```
 
 ### 3. Create a Patient
