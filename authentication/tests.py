@@ -1,6 +1,9 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.db.utils import IntegrityError
+from rest_framework.test import APITestCase
+from rest_framework import status
+from django.urls import reverse
 
 User = get_user_model()
 
@@ -55,3 +58,84 @@ class UserModelTests(TestCase):
                 name='No Email User',
                 password='Password123!'
             )
+
+class AuthenticationAPITests(APITestCase):
+    """
+    Unit tests for registration, login, and profile API endpoints.
+    """
+
+    def setUp(self):
+        self.register_url = reverse('auth_register')
+        self.login_url = reverse('auth_login')
+        self.profile_url = reverse('auth_profile')
+        self.test_user = User.objects.create_user(
+            email='existing@example.com',
+            name='Existing User',
+            password='ExistingPassword123!'
+        )
+
+    def test_register_user_success(self):
+        payload = {
+            'name': 'New User',
+            'email': 'newuser@example.com',
+            'password': 'StrongPassword123!'
+        }
+        response = self.client.post(self.register_url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['user']['email'], 'newuser@example.com')
+        self.assertEqual(response.data['user']['name'], 'New User')
+        self.assertIn('tokens', response.data)
+        self.assertIn('access', response.data['tokens'])
+        self.assertIn('refresh', response.data['tokens'])
+
+    def test_register_duplicate_email_fails(self):
+        payload = {
+            'name': 'Duplicate User',
+            'email': 'existing@example.com',
+            'password': 'Password123!'
+        }
+        response = self.client.post(self.register_url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('email', response.data)
+
+    def test_register_missing_fields_fails(self):
+        payload = {'email': 'missing@example.com'}
+        response = self.client.post(self.register_url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_login_success(self):
+        payload = {
+            'email': 'existing@example.com',
+            'password': 'ExistingPassword123!'
+        }
+        response = self.client.post(self.login_url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('access', response.data)
+        self.assertIn('refresh', response.data)
+        self.assertEqual(response.data['user']['email'], 'existing@example.com')
+
+    def test_login_invalid_password_fails(self):
+        payload = {
+            'email': 'existing@example.com',
+            'password': 'WrongPassword!'
+        }
+        response = self.client.post(self.login_url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_login_unknown_email_fails(self):
+        payload = {
+            'email': 'unknown@example.com',
+            'password': 'AnyPassword123!'
+        }
+        response = self.client.post(self.login_url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_profile_authenticated_success(self):
+        self.client.force_authenticate(user=self.test_user)
+        response = self.client.get(self.profile_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['email'], self.test_user.email)
+
+    def test_profile_unauthenticated_fails(self):
+        response = self.client.get(self.profile_url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

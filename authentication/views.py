@@ -1,7 +1,6 @@
 import time
 from django.db import connection
 from django.contrib.auth import get_user_model
-User = get_user_model()
 from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -11,6 +10,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from authentication.serializers import (
     UserSerializer,
     RegisterSerializer,
+    LoginSerializer,
     RedisRevokeTokenSerializer,
 )
 from authentication.redis_client import (
@@ -18,9 +18,11 @@ from authentication.redis_client import (
     check_redis_health,
 )
 
+User = get_user_model()
+
 class HealthCheckView(APIView):
     """
-    Health check endpoint returning the status of the Django app, PostgreSQL, and Redis.
+    Health check endpoint returning the status of Django, Database, and Redis.
     """
     permission_classes = [AllowAny]
 
@@ -58,7 +60,8 @@ class HealthCheckView(APIView):
 
 class RegisterView(generics.CreateAPIView):
     """
-    Public registration endpoint. Creates a new user and issues SimpleJWT access/refresh tokens.
+    POST /api/auth/register/
+    Register a new user with name, email, and password.
     """
     queryset = User.objects.all()
     permission_classes = [AllowAny]
@@ -69,11 +72,11 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        # Generate JWT tokens for immediate use
+        # Generate JWT tokens for immediate access
         refresh = RefreshToken.for_user(user)
 
         return Response({
-            "message": "User registered successfully",
+            "message": "User registered successfully.",
             "user": UserSerializer(user).data,
             "tokens": {
                 "refresh": str(refresh),
@@ -81,9 +84,32 @@ class RegisterView(generics.CreateAPIView):
             }
         }, status=status.HTTP_201_CREATED)
 
+class LoginView(APIView):
+    """
+    POST /api/auth/login/
+    Log in a user with email and password, returning JWT access & refresh tokens.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+        user = validated_data['user']
+        tokens = validated_data['tokens']
+
+        return Response({
+            "message": "Login successful.",
+            "user": UserSerializer(user).data,
+            "access": tokens['access'],
+            "refresh": tokens['refresh'],
+            "tokens": tokens
+        }, status=status.HTTP_200_OK)
+
 class UserProfileView(generics.RetrieveUpdateAPIView):
     """
-    Protected user profile endpoint requiring valid JWT authentication.
+    GET /api/auth/profile/
+    Retrieve or update currently authenticated user profile.
     """
     permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
@@ -93,6 +119,7 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
 
 class RedisRevokeTokenView(APIView):
     """
+    POST /api/auth/redis-revoke/
     Revokes a JWT token directly in Redis cache for instantaneous invalidation.
     """
     permission_classes = [IsAuthenticated]

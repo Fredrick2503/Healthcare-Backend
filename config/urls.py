@@ -20,6 +20,7 @@ urlpatterns = [
     path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('api/token/blacklist/', TokenBlacklistView.as_view(), name='token_blacklist'),
 
-    # Application Endpoints & Health Check
+    # Application Endpoints
     path('api/', include('authentication.urls')),
+    path('api/', include('healthcare.urls')),
 ]
